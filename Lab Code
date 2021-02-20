@@ -1,0 +1,74 @@
+import pandas as pd
+import numpy as np
+import os
+import nibabel as nib
+import glob
+from tensorflow import keras
+from tensorflow.keras import layers
+
+im_array = []
+array = []
+fdata_array = []
+q = []
+def array_form(file_loc_ext, file_loc):
+    for i in glob.glob(file_loc_ext):
+        im_array.append(i)
+    for i in range(len(im_array)):
+        array.append(nib.load(os.path.join(file_loc, im_array[i])))
+    for i in range(len(im_array)):
+        a = array[i].get_fdata()
+        fdata_array.append(a.reshape((-1)))
+    for i in range(len(im_array)):
+        p = pd.DataFrame(fdata_array[i])
+        z = p.transpose()
+        q.append(z)
+        
+def clear_func():
+    im_array.clear()
+    array.clear()
+    fdata_array.clear()
+    q.clear()
+
+cnt_loc_ext ='C://Users//nkdge//Desktop//Kumar Lab_data//Data//dti_svm_60_2//train//controls//*.nii'
+cnt_loc = 'C://Users//nkdge//Desktop//Kumar Lab_data//Data//dti_svm_60_2//train//controls'
+array_form(cnt_loc_ext, cnt_loc)
+cnt_df = pd.concat(q)
+cnt_df['target'] = 0
+#cnt_df
+
+clear_func()
+pts_loc_ext ='C://Users//nkdge//Desktop//Kumar Lab_data//Data//dti_svm_60_2//train//osa//*.nii'
+pts_loc = 'C://Users//nkdge//Desktop//Kumar Lab_data//Data//dti_svm_60_2//train//osa'
+array_form(pts_loc_ext, pts_loc)
+pts_df = pd.concat(q)
+pts_df['target'] = 1
+#pts_df
+
+both_df = [cnt_df, pts_df]
+fdf = pd.concat(both_df)
+#fdf
+
+input_shape = fdf['target']
+model = keras.Sequential([layers.Dense(1048, activation = 'relu', input_shape=input_shape),
+                          layers.Dense(1)
+                         ])
+model.compile(optimizer = 'adam', loss = 'mae')
+
+max_ = df_train.max(axis=0)
+min_ = df_train.min(axis=0)
+df_train = (df_train - min_) / (max_ - min_)
+df_valid = (df_valid - min_) / (max_ - min_)
+
+# Split features and target
+X_train = df_train.drop('target', axis=1)
+X_valid = df_valid.drop('target', axis=1)
+y_train = df_train['target']
+y_valid = df_valid['target']
+
+                
+history = model.fit(X_train, y_train, validation_data =(X_valid, y_valid), batch_size = 10, epochs = 5)
+
+
+
+    
+    
